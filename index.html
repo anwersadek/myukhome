@@ -41,13 +41,18 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-h
 }
 .tab:hover{color:rgba(255,255,255,.8)}
 .tab.active{color:#fff;border-bottom-color:var(--brick)}
-.sync-btn{
-  background:var(--teal);color:#fff;border:none;padding:6px 14px;border-radius:var(--rx);
-  font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;flex-shrink:0;
-  display:flex;align-items:center;gap:6px;transition:all .2s;letter-spacing:.3px
+.sync-bar{
+  display:flex;align-items:center;gap:6px;padding:5px 12px;border-radius:var(--rx);
+  cursor:pointer;flex-shrink:0;font-size:.68rem;font-weight:500;transition:all .2s;
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.1);
+  color:rgba(255,255,255,.6);letter-spacing:.2px
 }
-.sync-btn:hover{filter:brightness(1.15)}
-.sync-dot{width:6px;height:6px;border-radius:50%;background:#5ee89c}
+.sync-bar:hover{background:rgba(255,255,255,.14);color:#fff}
+.sync-dot{width:7px;height:7px;border-radius:50%;flex-shrink:0;transition:background .3s}
+.sync-dot.off{background:#f85149}
+.sync-dot.on{background:#5ee89c}
+.sync-dot.syncing{background:#e8a838;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{opacity:1}50%{opacity:.3}}
 
 @media(max-width:700px){.tab{padding:0 9px;font-size:.68rem}}
 
@@ -222,7 +227,10 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-h
     <div class="tab" data-p="home">Find Home</div>
     <div class="tab" data-p="timeline">Timeline</div>
   </div>
-  <button class="sync-btn" onclick="openSync()"><span class="sync-dot"></span> Sync</button>
+  <div class="sync-bar" id="syncBar" onclick="openSync()">
+    <span class="sync-dot" id="syncDotIcon"></span>
+    <span class="sync-text" id="syncText">Not connected</span>
+  </div>
 </div>
 
 <div class="app">
@@ -408,42 +416,44 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-h
 <!-- ═══ SYNC MODAL ═══ -->
 <div class="modal-bg" id="syncModal">
   <div class="modal">
-    <h2>🔗 Google Sheets Sync Setup</h2>
-    <p>Connect to a Google Sheet so you and your wife can both view and update the plan from any device.</p>
-    <div class="step"><div class="step-n">1</div><div class="step-t">Create a new Google Sheet and name it <code>HomePlan Sync</code></div></div>
-    <div class="step"><div class="step-n">2</div><div class="step-t">Go to <code>Extensions → Apps Script</code> and paste the Web App script (provided below). Deploy it as a web app with "Anyone" access.</div></div>
-    <div class="step"><div class="step-n">3</div><div class="step-t">Copy the deployed Web App URL and paste it below.</div></div>
-    <div class="f" style="margin-top:16px"><label>Google Apps Script Web App URL</label><input id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
-    <div style="display:flex;gap:10px;margin-top:12px">
-      <button class="btn btn-p" onclick="saveSync()">Save & Connect</button>
-      <button class="btn btn-o" onclick="pushToSheet()">Push Data Now</button>
-      <button class="btn btn-o" onclick="pullFromSheet()">Pull Data</button>
+    <h2>🔗 Google Sheets Sync</h2>
+    <div id="syncConnView">
+      <div id="syncConnected" style="display:none">
+        <div style="background:var(--green-l);border:1.5px solid #b0d9b4;border-radius:var(--rs);padding:16px;margin-bottom:16px;display:flex;align-items:center;gap:10px">
+          <span style="font-size:1.4rem">✅</span>
+          <div>
+            <div style="font-weight:600;color:var(--green);font-size:.88rem">Connected & Syncing</div>
+            <div style="font-size:.72rem;color:var(--ink3)" id="lastSyncTime">Last sync: never</div>
+          </div>
+        </div>
+        <div style="display:flex;gap:10px;margin-bottom:12px">
+          <button class="btn btn-p" onclick="pushToSheet()">⬆ Push Data Now</button>
+          <button class="btn btn-t" onclick="pullFromSheet()">⬇ Pull Data</button>
+        </div>
+        <div id="syncActionStatus" style="font-size:.78rem;min-height:20px;margin-bottom:12px"></div>
+        <div style="border-top:1px solid var(--bg2);padding-top:12px">
+          <div class="f"><label>Your Web App URL</label><input id="syncUrl" style="font-size:.76rem;color:var(--ink3)"></div>
+          <div style="display:flex;gap:8px">
+            <button class="btn btn-o" onclick="saveSync()" style="font-size:.72rem">Update URL</button>
+            <button class="btn btn-o" onclick="disconnectSync()" style="font-size:.72rem;color:var(--brick);border-color:#e8c0b4">Disconnect</button>
+          </div>
+        </div>
+      </div>
+      <div id="syncSetup">
+        <p style="font-size:.85rem;color:var(--ink3);margin-bottom:16px;line-height:1.6">Set up sync so you and your wife can both access the plan from any device. Follow these 3 steps:</p>
+        <div class="step"><div class="step-n">1</div><div class="step-t">Create a new <b>Google Sheet</b> → click <code>Extensions → Apps Script</code></div></div>
+        <div class="step"><div class="step-n">2</div><div class="step-t">Delete all existing code and <b>paste</b> the code below → click 💾 Save</div></div>
+        <div style="background:var(--bg2);padding:12px;border-radius:var(--rs);font-family:monospace;font-size:.68rem;line-height:1.5;margin:0 0 16px 38px;overflow-x:auto;white-space:pre-wrap;max-height:180px;overflow-y:auto;user-select:all" id="scriptCode">function doPost(e){var s=SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');if(!s)s=SpreadsheetApp.getActiveSpreadsheet().insertSheet('Data');var d=JSON.parse(e.postData.contents);s.clear();s.getRange(1,1).setValue(JSON.stringify(d));s.getRange(1,2).setValue(new Date().toISOString());return ContentService.createTextOutput(JSON.stringify({status:'ok'})).setMimeType(ContentService.MimeType.JSON)}function doGet(e){var s=SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');if(!s)return ContentService.createTextOutput(JSON.stringify({status:'empty'})).setMimeType(ContentService.MimeType.JSON);var v=s.getRange(1,1).getValue();var t=s.getRange(1,2).getValue();return ContentService.createTextOutput(JSON.stringify({status:'ok',data:JSON.parse(v),updated:t})).setMimeType(ContentService.MimeType.JSON)}</div>
+        <button class="btn btn-o" style="margin-left:38px;margin-bottom:16px;font-size:.72rem" onclick="navigator.clipboard.writeText(document.getElementById('scriptCode').textContent);this.textContent='✓ Copied!';setTimeout(()=>this.textContent='📋 Copy Code',2000)">📋 Copy Code</button>
+        <div class="step"><div class="step-n">3</div><div class="step-t">Click <b>Deploy → New deployment → Web app</b> → set "Who has access" to <b>Anyone</b> → Deploy → <b>Copy the URL</b> and paste below</div></div>
+        <div class="f" style="margin-top:16px"><label>Paste your Web App URL here</label><input id="syncUrlNew" placeholder="https://script.google.com/macros/s/…/exec"></div>
+        <button class="btn btn-p" onclick="connectSync()" style="margin-top:4px">🔗 Connect & Sync</button>
+        <div id="connectStatus" style="font-size:.78rem;min-height:20px;margin-top:8px"></div>
+      </div>
+    </div>
+    <div style="display:flex;justify-content:flex-end;margin-top:16px;border-top:1px solid var(--bg2);padding-top:12px">
       <button class="btn btn-o" onclick="closeSyncModal()">Close</button>
     </div>
-    <div id="syncStatus" style="margin-top:12px;font-size:.78rem;color:var(--teal)"></div>
-    <details style="margin-top:20px">
-      <summary style="cursor:pointer;font-weight:600;font-size:.85rem;color:var(--brick)">📋 Apps Script Code (copy this)</summary>
-      <pre style="background:var(--bg2);padding:14px;border-radius:var(--rs);font-size:.7rem;overflow-x:auto;margin-top:10px;line-height:1.5;white-space:pre-wrap">function doPost(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
-  if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Data');
-  var data = JSON.parse(e.postData.contents);
-  sheet.clear();
-  sheet.getRange(1,1).setValue(JSON.stringify(data));
-  sheet.getRange(1,2).setValue(new Date().toISOString());
-  return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
-    .setMimeType(ContentService.MimeType.JSON);
-}
-
-function doGet(e) {
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
-  if (!sheet) return ContentService.createTextOutput(JSON.stringify({status:'empty'}))
-    .setMimeType(ContentService.MimeType.JSON);
-  var val = sheet.getRange(1,1).getValue();
-  var ts = sheet.getRange(1,2).getValue();
-  return ContentService.createTextOutput(JSON.stringify({status:'ok',data:JSON.parse(val),updated:ts}))
-    .setMimeType(ContentService.MimeType.JSON);
-}</pre>
-    </details>
   </div>
 </div>
 
@@ -864,26 +874,174 @@ function renderTL(){
 }
 
 // ══════════════════════════════════════
-// GOOGLE SHEETS SYNC
+// GOOGLE SHEETS SYNC (hardcoded)
 // ══════════════════════════════════════
-function openSync(){document.getElementById('syncModal').classList.add('open');document.getElementById('syncUrl').value=D.syncUrl||''}
+let lastSyncTs = localStorage.getItem('hp_lastSync') || '';
+let syncConnected = !!D.syncUrl;
+
+function updateSyncUI(){
+  const dot = document.getElementById('syncDotIcon');
+  const text = document.getElementById('syncText');
+  const connDiv = document.getElementById('syncConnected');
+  const setupDiv = document.getElementById('syncSetup');
+
+  if(D.syncUrl){
+    dot.className = 'sync-dot on';
+    const ago = lastSyncTs ? timeAgo(lastSyncTs) : 'never';
+    text.textContent = 'Synced ' + ago;
+    connDiv.style.display = 'block';
+    setupDiv.style.display = 'none';
+    document.getElementById('syncUrl').value = D.syncUrl;
+    document.getElementById('lastSyncTime').textContent = 'Last sync: ' + (lastSyncTs ? new Date(lastSyncTs).toLocaleString('en-GB') : 'never');
+  } else {
+    dot.className = 'sync-dot off';
+    text.textContent = 'Not connected';
+    connDiv.style.display = 'none';
+    setupDiv.style.display = 'block';
+  }
+}
+
+function timeAgo(iso){
+  const diff = Date.now() - new Date(iso).getTime();
+  const mins = Math.floor(diff/60000);
+  if(mins < 1) return 'just now';
+  if(mins < 60) return mins + 'm ago';
+  const hrs = Math.floor(mins/60);
+  if(hrs < 24) return hrs + 'h ago';
+  return Math.floor(hrs/24) + 'd ago';
+}
+
+function openSync(){
+  document.getElementById('syncModal').classList.add('open');
+  updateSyncUI();
+}
 function closeSyncModal(){document.getElementById('syncModal').classList.remove('open')}
-function saveSync(){D.syncUrl=document.getElementById('syncUrl').value.trim();save();document.getElementById('syncStatus').textContent='✓ URL saved!';}
-function pushToSheet(){
-  const url=D.syncUrl;if(!url){alert('Please save a sync URL first');return}
-  document.getElementById('syncStatus').textContent='Pushing data…';
-  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)})
-    .then(()=>{document.getElementById('syncStatus').textContent='✓ Data pushed to Google Sheet!';})
-    .catch(e=>{document.getElementById('syncStatus').textContent='Error: '+e.message});
+
+function connectSync(){
+  const url = document.getElementById('syncUrlNew').value.trim();
+  const statusEl = document.getElementById('connectStatus');
+  if(!url || !url.startsWith('https://script.google.com/')){
+    statusEl.innerHTML = '<span style="color:var(--brick)">❌ Please paste a valid Google Apps Script URL starting with https://script.google.com/</span>';
+    return;
+  }
+  D.syncUrl = url;
+  save();
+  statusEl.innerHTML = '<span style="color:var(--amber)">⏳ Connecting & pushing data…</span>';
+  pushToSheet(function(ok){
+    if(ok){
+      statusEl.innerHTML = '<span style="color:var(--green)">✅ Connected successfully! Data synced.</span>';
+      setTimeout(()=>updateSyncUI(), 1000);
+    } else {
+      statusEl.innerHTML = '<span style="color:var(--brick)">❌ Connection failed. Check URL and try again.</span>';
+    }
+  });
 }
+
+function saveSync(){
+  const url = document.getElementById('syncUrl').value.trim();
+  if(url) D.syncUrl = url;
+  save();
+  updateSyncUI();
+  document.getElementById('syncActionStatus').innerHTML = '<span style="color:var(--green)">✓ URL updated</span>';
+}
+
+function disconnectSync(){
+  if(!confirm('Disconnect sync? Your local data will remain.')) return;
+  D.syncUrl = '';
+  lastSyncTs = '';
+  localStorage.removeItem('hp_lastSync');
+  save();
+  updateSyncUI();
+}
+
+function setSyncing(active){
+  const dot = document.getElementById('syncDotIcon');
+  const text = document.getElementById('syncText');
+  if(active){
+    dot.className = 'sync-dot syncing';
+    text.textContent = 'Syncing…';
+  }
+}
+
+function pushToSheet(callback){
+  const url = D.syncUrl;
+  if(!url){ if(callback) callback(false); return; }
+  setSyncing(true);
+  const statusEl = document.getElementById('syncActionStatus');
+  if(statusEl) statusEl.innerHTML = '<span style="color:var(--amber)">⬆ Pushing…</span>';
+
+  fetch(url, {
+    method: 'POST',
+    mode: 'no-cors',
+    headers: {'Content-Type':'application/json'},
+    body: JSON.stringify(D)
+  }).then(()=>{
+    lastSyncTs = new Date().toISOString();
+    localStorage.setItem('hp_lastSync', lastSyncTs);
+    updateSyncUI();
+    if(statusEl) statusEl.innerHTML = '<span style="color:var(--green)">✅ Data pushed successfully!</span>';
+    if(callback) callback(true);
+  }).catch(e=>{
+    updateSyncUI();
+    if(statusEl) statusEl.innerHTML = '<span style="color:var(--brick)">❌ Push failed: '+e.message+'</span>';
+    if(callback) callback(false);
+  });
+}
+
 function pullFromSheet(){
-  const url=D.syncUrl;if(!url){alert('Please save a sync URL first');return}
-  document.getElementById('syncStatus').textContent='Pulling data…';
-  fetch(url).then(r=>r.json()).then(j=>{
-    if(j.status==='ok'&&j.data){D=j.data;save();location.reload();}
-    else document.getElementById('syncStatus').textContent='No data found on sheet.';
-  }).catch(e=>{document.getElementById('syncStatus').textContent='Error: '+e.message});
+  const url = D.syncUrl;
+  if(!url) return;
+  setSyncing(true);
+  const statusEl = document.getElementById('syncActionStatus');
+  if(statusEl) statusEl.innerHTML = '<span style="color:var(--amber)">⬇ Pulling…</span>';
+
+  fetch(url)
+    .then(r=>r.json())
+    .then(j=>{
+      if(j.status==='ok' && j.data){
+        D = j.data;
+        D.syncUrl = url; // preserve URL
+        save();
+        lastSyncTs = new Date().toISOString();
+        localStorage.setItem('hp_lastSync', lastSyncTs);
+        if(statusEl) statusEl.innerHTML = '<span style="color:var(--green)">✅ Data pulled! Reloading…</span>';
+        setTimeout(()=>location.reload(), 800);
+      } else {
+        updateSyncUI();
+        if(statusEl) statusEl.innerHTML = '<span style="color:var(--ink3)">No data found on the sheet yet.</span>';
+      }
+    })
+    .catch(e=>{
+      updateSyncUI();
+      if(statusEl) statusEl.innerHTML = '<span style="color:var(--brick)">❌ Pull failed: '+e.message+'</span>';
+    });
 }
+
+// ── AUTO-SYNC on page exit ──
+window.addEventListener('beforeunload', function(){
+  if(D.syncUrl){
+    // Use sendBeacon for reliable fire-and-forget on page close
+    const blob = new Blob([JSON.stringify(D)], {type:'application/json'});
+    navigator.sendBeacon(D.syncUrl, blob);
+    lastSyncTs = new Date().toISOString();
+    localStorage.setItem('hp_lastSync', lastSyncTs);
+  }
+});
+
+// ── Also auto-sync every 5 minutes if connected ──
+setInterval(()=>{
+  if(D.syncUrl){
+    fetch(D.syncUrl, {
+      method:'POST', mode:'no-cors',
+      headers:{'Content-Type':'application/json'},
+      body: JSON.stringify(D)
+    }).then(()=>{
+      lastSyncTs = new Date().toISOString();
+      localStorage.setItem('hp_lastSync', lastSyncTs);
+      updateSyncUI();
+    }).catch(()=>{});
+  }
+}, 5 * 60 * 1000);
 
 // ══════════════════════════════════════
 // NOTES
@@ -894,7 +1052,7 @@ const nEl=document.getElementById('gNotes');nEl.value=D.notes||'';nEl.addEventLi
 // INIT
 // ══════════════════════════════════════
 if(D.costs.price){document.getElementById('cPrice').value=D.costs.price;document.getElementById('cDeposit').value=D.costs.deposit;document.getElementById('cBuyer').value=D.costs.buyer;}
-calcCosts();renderSav();renderLenders();renderRelLoans();renderLocs();renderProps();calcMort();renderDash();
+calcCosts();renderSav();renderLenders();renderRelLoans();renderLocs();renderProps();calcMort();renderDash();updateSyncUI();
 </script>
 </body>
 </html>
