@@ -1,0 +1,900 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>HomePlan — London Home Buying Planner</title>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Outfit:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#faf9f6;--bg2:#f0ede6;--bg3:#e6e2d9;
+  --card:#fff;--card-alt:#fcfbf8;
+  --ink:#1b1812;--ink2:#3d3830;--ink3:#7a7468;--ink4:#b5afa4;
+  --brick:#b44930;--brick-l:#fdf0ed;--brick-d:#8c3622;
+  --teal:#1a7a6d;--teal-l:#e6f5f2;
+  --navy:#2c4a6e;--navy-l:#e8eef5;
+  --amber:#c08c2e;--amber-l:#fdf6e3;
+  --plum:#6e3a7a;--plum-l:#f3eaf7;
+  --green:#2d7a3a;--green-l:#e8f5ea;
+  --r:14px;--rs:8px;--rx:5px;
+  --sh:0 1px 4px rgba(0,0,0,0.04),0 8px 28px rgba(0,0,0,0.06);
+  --sh2:0 2px 8px rgba(0,0,0,0.05),0 16px 48px rgba(0,0,0,0.08);
+  --bdt-rate:163;
+}
+body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-height:100vh;-webkit-font-smoothing:antialiased}
+
+/* ── TOPBAR ── */
+.topbar{
+  background:var(--ink);color:#fff;height:54px;display:flex;align-items:center;
+  padding:0 20px;position:sticky;top:0;z-index:50;gap:16px;
+  box-shadow:0 2px 12px rgba(0,0,0,.15)
+}
+.brand{font-family:'Fraunces',serif;font-size:1.05rem;display:flex;align-items:center;gap:8px;flex-shrink:0}
+.brand span{font-size:1.2rem}
+.tabs{display:flex;height:100%;overflow-x:auto;flex:1;gap:0;-ms-overflow-style:none;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  padding:0 14px;height:100%;display:flex;align-items:center;font-size:.76rem;font-weight:500;
+  color:rgba(255,255,255,.5);cursor:pointer;border-bottom:2px solid transparent;
+  white-space:nowrap;transition:all .2s;letter-spacing:.3px
+}
+.tab:hover{color:rgba(255,255,255,.8)}
+.tab.active{color:#fff;border-bottom-color:var(--brick)}
+.sync-btn{
+  background:var(--teal);color:#fff;border:none;padding:6px 14px;border-radius:var(--rx);
+  font-family:inherit;font-size:.72rem;font-weight:600;cursor:pointer;flex-shrink:0;
+  display:flex;align-items:center;gap:6px;transition:all .2s;letter-spacing:.3px
+}
+.sync-btn:hover{filter:brightness(1.15)}
+.sync-dot{width:6px;height:6px;border-radius:50%;background:#5ee89c}
+
+@media(max-width:700px){.tab{padding:0 9px;font-size:.68rem}}
+
+/* ── LAYOUT ── */
+.app{max-width:1180px;margin:0 auto;padding:24px 16px 100px}
+.pg{display:none;animation:pin .35s ease}.pg.act{display:block}
+@keyframes pin{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── TYPOGRAPHY ── */
+.sec-t{font-family:'Fraunces',serif;font-size:1.5rem;font-weight:600;margin-bottom:4px}
+.sec-s{color:var(--ink3);font-size:.85rem;font-weight:300;margin-bottom:24px}
+
+/* ── CARD ── */
+.cd{background:var(--card);border-radius:var(--r);padding:24px;box-shadow:var(--sh);margin-bottom:16px}
+.cd:hover{box-shadow:var(--sh2)}
+.cd-lbl{font-size:.68rem;text-transform:uppercase;letter-spacing:1px;font-weight:600;margin-bottom:14px;display:flex;align-items:center;gap:8px;color:var(--ink3)}
+.cd-lbl .dt{width:8px;height:8px;border-radius:50%}
+
+/* ── GRID ── */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.g3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px}
+.g4{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:12px}
+@media(max-width:800px){.g2,.g3{grid-template-columns:1fr}}
+
+/* ── FORM ── */
+.f{margin-bottom:16px}
+.f label{display:block;font-size:.74rem;font-weight:600;color:var(--ink2);margin-bottom:5px}
+.f input,.f select,.f textarea{
+  width:100%;padding:10px 12px;border:1.5px solid var(--bg3);border-radius:var(--rx);
+  font-family:inherit;font-size:.88rem;color:var(--ink);background:var(--card-alt);outline:none;transition:border .2s
+}
+.f input:focus,.f select:focus,.f textarea:focus{border-color:var(--brick)}
+.f textarea{resize:vertical;min-height:60px}
+.f .ht{font-size:.68rem;color:var(--ink4);margin-top:3px}
+
+/* ── BUTTONS ── */
+.btn{
+  padding:9px 18px;border-radius:var(--rx);font-family:inherit;font-weight:600;
+  font-size:.8rem;cursor:pointer;transition:all .2s;border:none;display:inline-flex;align-items:center;gap:6px
+}
+.btn-p{background:var(--brick);color:#fff}.btn-p:hover{background:var(--brick-d)}
+.btn-t{background:var(--teal);color:#fff}.btn-t:hover{filter:brightness(1.1)}
+.btn-o{background:transparent;border:1.5px solid var(--bg3);color:var(--ink3)}.btn-o:hover{border-color:var(--ink4)}
+.btn-x{background:none;border:1px solid var(--bg3);color:var(--ink4);padding:5px 9px;font-size:.72rem;cursor:pointer;border-radius:var(--rx)}.btn-x:hover{color:var(--brick);border-color:var(--brick)}
+
+/* ── STAT ── */
+.st-g{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
+.st{background:var(--card);border-radius:var(--rs);padding:16px;box-shadow:var(--sh);text-align:center;position:relative;overflow:hidden}
+.st::before{content:'';position:absolute;top:0;left:0;right:0;height:3px}
+.st.c1::before{background:var(--brick)}.st.c2::before{background:var(--teal)}.st.c3::before{background:var(--navy)}.st.c4::before{background:var(--amber)}.st.c5::before{background:var(--plum)}
+.st-v{font-family:'Fraunces',serif;font-size:1.45rem;line-height:1.2}
+.st-l{font-size:.67rem;text-transform:uppercase;letter-spacing:.7px;color:var(--ink3);margin-top:2px}
+
+/* ── RESULT BOX ── */
+.rb{border-radius:var(--rs);padding:18px;text-align:center;margin-top:14px}
+.rb .big{font-family:'Fraunces',serif;font-size:1.7rem}
+.rb .lbl{font-size:.74rem;margin-top:2px}
+.rb .sub{font-size:.72rem;margin-top:4px;opacity:.7}
+.rb-brick{background:var(--brick-l);border:1.5px solid #e8c0b4}.rb-brick .big{color:var(--brick)}.rb-brick .lbl{color:var(--brick-d)}
+.rb-teal{background:var(--teal-l);border:1.5px solid #b0d9d2}.rb-teal .big{color:var(--teal)}.rb-teal .lbl{color:var(--teal)}
+.rb-navy{background:var(--navy-l);border:1.5px solid #b0c0d8}.rb-navy .big{color:var(--navy)}.rb-navy .lbl{color:var(--navy)}
+.rb-amber{background:var(--amber-l);border:1.5px solid #e0d1a0}.rb-amber .big{color:var(--amber)}.rb-amber .lbl{color:var(--amber)}
+
+/* ── TABLE ── */
+.tb{width:100%;border-collapse:collapse;font-size:.82rem}
+.tb th{text-align:left;font-size:.67rem;text-transform:uppercase;letter-spacing:.8px;color:var(--ink3);padding:8px 10px;border-bottom:1.5px solid var(--bg2);font-weight:600}
+.tb td{padding:10px;border-bottom:1px solid var(--bg2);vertical-align:middle}
+.tb tr:last-child td{border-bottom:none}
+.tb tr:hover td{background:var(--card-alt)}
+
+/* ── INNER TABS ── */
+.itabs{display:flex;gap:0;border-bottom:1.5px solid var(--bg2);margin-bottom:20px;overflow-x:auto}
+.itab{padding:9px 16px;font-size:.78rem;font-weight:500;color:var(--ink3);cursor:pointer;border-bottom:2px solid transparent;white-space:nowrap;transition:all .2s}
+.itab:hover{color:var(--ink)}.itab.act{color:var(--brick);border-bottom-color:var(--brick)}
+.ipan{display:none}.ipan.act{display:block;animation:pin .3s ease}
+
+/* ── PIE ── */
+.pie-w{display:flex;align-items:center;gap:28px;flex-wrap:wrap;justify-content:center;padding:10px 0}
+.pie-r{width:170px;height:170px;border-radius:50%;position:relative;flex-shrink:0}
+.pie-c{position:absolute;inset:34px;background:var(--card);border-radius:50%;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pie-c span:first-child{font-family:'Fraunces',serif;font-size:1.1rem}
+.pie-c span:last-child{font-size:.6rem;color:var(--ink3);text-transform:uppercase;letter-spacing:.5px}
+.pie-lg{display:flex;flex-direction:column;gap:8px}
+.pie-li{display:flex;align-items:center;gap:9px;font-size:.82rem}
+.pie-li .d{width:10px;height:10px;border-radius:3px;flex-shrink:0}
+.pie-li .v{margin-left:auto;font-weight:600;font-size:.78rem;padding-left:14px}
+
+/* ── SCORE BAR ── */
+.sb{margin-bottom:12px}
+.sb-h{display:flex;justify-content:space-between;font-size:.78rem;margin-bottom:4px}
+.sb-h span:last-child{font-weight:600}
+.sb-t{height:7px;background:var(--bg2);border-radius:99px;overflow:hidden}
+.sb-f{height:100%;border-radius:99px;transition:width .5s cubic-bezier(.16,1,.3,1)}
+
+/* ── TASK ── */
+.tk{display:flex;align-items:flex-start;gap:10px;padding:11px 0;border-bottom:1px solid var(--bg2);cursor:pointer;transition:opacity .2s}
+.tk:last-child{border-bottom:none}.tk.dn{opacity:.4}.tk.dn .tk-n{text-decoration:line-through}
+.tk-c{width:20px;height:20px;border-radius:5px;border:2px solid var(--bg3);flex-shrink:0;display:flex;align-items:center;justify-content:center;font-size:11px;color:transparent;transition:all .2s;margin-top:1px}
+.tk.dn .tk-c{border-color:var(--green);background:var(--green-l);color:var(--green)}
+.tk-n{font-weight:500;font-size:.86rem;line-height:1.4}
+.tk-a{margin-left:auto;flex-shrink:0}
+
+/* ── TIMELINE ── */
+.tl{position:relative;padding-left:26px}
+.tl::before{content:'';position:absolute;left:7px;top:6px;bottom:6px;width:2px;background:var(--bg3)}
+.tl-i{position:relative;padding-bottom:24px}.tl-i:last-child{padding-bottom:0}
+.tl-d{width:16px;height:16px;border-radius:50%;border:2.5px solid var(--bg3);background:var(--card);position:absolute;left:-23px;top:2px;z-index:1}
+.tl-i.dn .tl-d{border-color:var(--green);background:var(--green-l)}
+.tl-i.ac .tl-d{border-color:var(--brick);background:var(--brick-l);box-shadow:0 0 0 4px rgba(180,73,48,.12)}
+.tl-box{background:var(--card);border-radius:var(--rs);padding:14px 18px;box-shadow:var(--sh)}
+.tl-tt{font-weight:600;font-size:.88rem;margin-bottom:2px}
+.tl-mt{font-size:.72rem;color:var(--ink3)}
+
+/* ── REPAYMENT ROW ── */
+.rp-card{border:1.5px solid var(--bg2);border-radius:var(--rs);padding:18px;margin-bottom:12px;position:relative}
+.rp-card:hover{border-color:var(--ink4)}
+.rp-name{font-weight:700;font-size:1rem}
+.rp-amt{font-family:'Fraunces',serif;font-size:1.2rem;color:var(--brick);margin:4px 0}
+.rp-meta{font-size:.76rem;color:var(--ink3);line-height:1.6}
+.rp-timeline{margin-top:12px;max-height:200px;overflow-y:auto}
+.rp-mo{display:flex;justify-content:space-between;padding:6px 0;border-bottom:1px solid var(--bg2);font-size:.78rem}
+.rp-mo:last-child{border-bottom:none}
+.rp-mo .bdt{color:var(--ink3);font-size:.72rem}
+.rp-pbar{height:5px;background:var(--bg2);border-radius:99px;margin-top:10px;overflow:hidden}
+.rp-pfill{height:100%;border-radius:99px;background:var(--teal);transition:width .5s}
+
+/* ── COST TABLE ── */
+.cost-cat{font-size:.72rem;text-transform:uppercase;letter-spacing:.8px;font-weight:600;color:var(--ink4);padding:14px 0 6px;border-bottom:1px dashed var(--bg3)}
+.cost-row{display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--bg2);font-size:.84rem}
+.cost-row:last-child{border-bottom:none}
+.cost-row .cr-l{color:var(--ink2)}
+.cost-row .cr-v{font-weight:600}
+.cost-row .cr-v .bdt{font-weight:400;color:var(--ink3);font-size:.72rem}
+.cost-total{display:flex;justify-content:space-between;padding:12px 0;font-weight:700;font-size:1rem;border-top:2px solid var(--ink);margin-top:8px}
+
+/* ── ADD ROW ── */
+.ar{display:flex;gap:8px;margin-top:12px}
+.ar input{flex:1;padding:9px 12px;border:1.5px solid var(--bg3);border-radius:var(--rx);font-family:inherit;font-size:.85rem;background:var(--card-alt);color:var(--ink);outline:none}
+.ar input:focus{border-color:var(--brick)}
+
+/* ── SYNC SETUP MODAL ── */
+.modal-bg{position:fixed;inset:0;background:rgba(0,0,0,.45);backdrop-filter:blur(3px);z-index:200;display:none;align-items:center;justify-content:center}
+.modal-bg.open{display:flex}
+.modal{background:var(--card);border-radius:var(--r);padding:32px;max-width:520px;width:92%;box-shadow:var(--sh2);max-height:85vh;overflow-y:auto}
+.modal h2{font-family:'Fraunces',serif;font-size:1.3rem;margin-bottom:4px}
+.modal p{font-size:.85rem;color:var(--ink3);margin-bottom:20px;line-height:1.6}
+.modal .step{display:flex;gap:12px;margin-bottom:16px;align-items:flex-start}
+.modal .step-n{width:26px;height:26px;background:var(--brick);color:#fff;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:.72rem;font-weight:700;flex-shrink:0}
+.modal .step-t{font-size:.85rem;line-height:1.5}
+.modal .step-t code{background:var(--bg2);padding:2px 6px;border-radius:3px;font-size:.78rem}
+
+/* ── NOTES ── */
+.notes-a{width:100%;min-height:100px;padding:14px;border:1.5px solid var(--bg3);border-radius:var(--rs);font-family:inherit;font-size:.85rem;color:var(--ink);background:var(--card-alt);outline:none;resize:vertical;line-height:1.6}
+.notes-a:focus{border-color:var(--brick)}
+
+::-webkit-scrollbar{width:5px}::-webkit-scrollbar-track{background:transparent}::-webkit-scrollbar-thumb{background:var(--ink4);border-radius:99px}
+.tag{display:inline-block;font-size:.63rem;padding:2px 7px;border-radius:3px;font-weight:600}
+.tag-uk{background:var(--navy-l);color:var(--navy)}.tag-bd{background:var(--plum-l);color:var(--plum)}.tag-bank{background:var(--teal-l);color:var(--teal)}
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="brand"><span>🏠</span> HomePlan</div>
+  <div class="tabs" id="mainTabs">
+    <div class="tab active" data-p="dash">Dashboard</div>
+    <div class="tab" data-p="costs">House Costs</div>
+    <div class="tab" data-p="finance">My Savings</div>
+    <div class="tab" data-p="bank">Bank Loan</div>
+    <div class="tab" data-p="relatives">Relative Loans</div>
+    <div class="tab" data-p="location">Location</div>
+    <div class="tab" data-p="home">Find Home</div>
+    <div class="tab" data-p="timeline">Timeline</div>
+  </div>
+  <button class="sync-btn" onclick="openSync()"><span class="sync-dot"></span> Sync</button>
+</div>
+
+<div class="app">
+
+<!-- ═══ DASHBOARD ═══ -->
+<div class="pg act" id="pg-dash">
+  <h1 class="sec-t">London Home Plan — Dashboard</h1>
+  <p class="sec-s">Your complete view. All amounts in £ (GBP) with ৳ (BDT) equivalents.</p>
+  <div class="st-g" id="dashStats"></div>
+  <div class="g2">
+    <div class="cd">
+      <div class="cd-lbl"><span class="dt" style="background:var(--brick)"></span> Funding Breakdown</div>
+      <div class="pie-w" id="fundPie"></div>
+    </div>
+    <div class="cd">
+      <div class="cd-lbl"><span class="dt" style="background:var(--teal)"></span> Category Progress</div>
+      <div id="dashProgress"></div>
+    </div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--navy)"></span> Quick Notes</div>
+    <textarea class="notes-a" id="gNotes" placeholder="Jot anything — budget figures, agent contacts, visit dates…"></textarea>
+  </div>
+</div>
+
+<!-- ═══ HOUSE COSTS ═══ -->
+<div class="pg" id="pg-costs">
+  <h1 class="sec-t">Total House Buying Costs — UK</h1>
+  <p class="sec-s">Every cost from search to keys, based on current 2026 UK rates.</p>
+  <div class="cd">
+    <div class="f"><label>Target Property Price (£)</label><input type="number" id="cPrice" placeholder="e.g. 450000" oninput="calcCosts()"></div>
+    <div class="g2">
+      <div class="f"><label>Buyer Type</label>
+        <select id="cBuyer" onchange="calcCosts()"><option value="ftb">First-Time Buyer</option><option value="std">Standard Buyer</option><option value="add">Additional Property</option></select>
+      </div>
+      <div class="f"><label>Deposit %</label><input type="number" id="cDeposit" value="10" oninput="calcCosts()"><div class="ht">Typically 5-20% for UK mortgages</div></div>
+    </div>
+  </div>
+  <div class="cd" id="costBreakdown">
+    <div class="cd-lbl"><span class="dt" style="background:var(--brick)"></span> Complete Cost Breakdown</div>
+    <div id="costList"></div>
+  </div>
+</div>
+
+<!-- ═══ MY SAVINGS ═══ -->
+<div class="pg" id="pg-finance">
+  <h1 class="sec-t">My Savings & Own Funds</h1>
+  <p class="sec-s">Track all your personal savings that will go toward the home.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--green)"></span> Savings Sources</div>
+    <table class="tb"><thead><tr><th>Source</th><th>Amount (£)</th><th>BDT Equiv.</th><th>Status</th><th></th></tr></thead><tbody id="savBody"></tbody></table>
+    <div class="g3 ar" style="margin-top:16px">
+      <input id="sName" placeholder="Source (e.g. ISA, Cash)">
+      <input id="sAmt" type="number" placeholder="Amount £">
+      <select id="sStatus"><option>Available</option><option>Locked</option><option>Partial</option></select>
+    </div>
+    <button class="btn btn-p" onclick="addSav()" style="margin-top:10px">+ Add Source</button>
+    <div class="rb rb-teal" style="margin-top:16px">
+      <div class="big" id="totSav">£0</div>
+      <div class="lbl">Total Savings</div>
+      <div class="sub" id="totSavBDT"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ BANK LOAN ═══ -->
+<div class="pg" id="pg-bank">
+  <h1 class="sec-t">Bank Mortgage</h1>
+  <p class="sec-s">UK mortgage EMI calculator and lender comparison.</p>
+  <div class="itabs">
+    <div class="itab act" data-ip="bk-emi">EMI Calculator</div>
+    <div class="itab" data-ip="bk-comp">Compare Lenders</div>
+  </div>
+  <div class="ipan act" id="bk-emi">
+    <div class="cd">
+      <div class="g3">
+        <div class="f"><label>Mortgage Amount (£)</label><input type="number" id="mAmt" value="350000" oninput="calcMort()"></div>
+        <div class="f"><label>Interest Rate (%)</label><input type="number" id="mRate" value="4.5" step="0.1" oninput="calcMort()"></div>
+        <div class="f"><label>Term (Years)</label><input type="number" id="mTerm" value="25" oninput="calcMort()"></div>
+      </div>
+      <div class="g3">
+        <div class="rb rb-brick"><div class="big" id="mEmi">—</div><div class="lbl">Monthly Payment</div><div class="sub" id="mEmiBDT"></div></div>
+        <div class="rb rb-navy"><div class="big" id="mInt">—</div><div class="lbl">Total Interest</div></div>
+        <div class="rb rb-amber"><div class="big" id="mTot">—</div><div class="lbl">Total Payable</div></div>
+      </div>
+      <div class="pie-w" id="mortPie" style="margin-top:16px"></div>
+    </div>
+  </div>
+  <div class="ipan" id="bk-comp">
+    <div class="cd">
+      <div class="cd-lbl"><span class="dt" style="background:var(--plum)"></span> Add Lender</div>
+      <div class="g2">
+        <div class="f"><label>Bank / Lender</label><input id="lkN" placeholder="e.g. Nationwide, HSBC"></div>
+        <div class="f"><label>Rate (%)</label><input id="lkR" type="number" step="0.1"></div>
+      </div>
+      <div class="g3">
+        <div class="f"><label>Type</label><select id="lkT"><option>Fixed 2yr</option><option>Fixed 5yr</option><option>Tracker</option><option>Variable</option></select></div>
+        <div class="f"><label>Arrangement Fee</label><input id="lkF" placeholder="e.g. £999"></div>
+        <div class="f"><label>Notes</label><input id="lkNt" placeholder="Any notes…"></div>
+      </div>
+      <button class="btn btn-p" onclick="addLender()" style="margin-top:4px">+ Add</button>
+      <div id="lenderList" style="margin-top:16px"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══ RELATIVE LOANS ═══ -->
+<div class="pg" id="pg-relatives">
+  <h1 class="sec-t">Loans from Relatives</h1>
+  <p class="sec-s">Track money borrowed from family — with monthly repayment timeline in £ and ৳.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--plum)"></span> Add Relative Loan</div>
+    <div class="g2">
+      <div class="f"><label>Relative Name</label><input id="rlN" placeholder="e.g. Uncle Karim"></div>
+      <div class="f"><label>Amount Borrowed (£)</label><input id="rlA" type="number" placeholder="e.g. 15000"></div>
+    </div>
+    <div class="g3">
+      <div class="f"><label>Based In</label><select id="rlB"><option value="uk">UK</option><option value="bd">Bangladesh</option></select></div>
+      <div class="f"><label>Repay Over (months)</label><input id="rlM" type="number" placeholder="e.g. 24"></div>
+      <div class="f"><label>Start Repaying From</label><input id="rlS" type="month" value="2026-09"></div>
+    </div>
+    <div class="f"><label>Notes</label><input id="rlNt" placeholder="Any agreement details…"></div>
+    <button class="btn btn-p" onclick="addRelLoan()">+ Add Relative Loan</button>
+  </div>
+  <div id="relCards" style="margin-top:8px"></div>
+  <div class="rb rb-brick" id="relTotal" style="margin-top:8px"></div>
+</div>
+
+<!-- ═══ LOCATION ═══ -->
+<div class="pg" id="pg-location">
+  <h1 class="sec-t">Choose Location — Around London</h1>
+  <p class="sec-s">Score and compare London boroughs & surrounding areas.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--plum)"></span> Score a Location</div>
+    <div class="f"><label>Area Name</label><input id="loN" placeholder="e.g. Barking, Croydon, Luton"></div>
+    <div class="g3">
+      <div class="f"><label>Commute (1-10)</label><input type="number" id="loC" min="1" max="10"></div>
+      <div class="f"><label>Safety (1-10)</label><input type="number" id="loSf" min="1" max="10"></div>
+      <div class="f"><label>Schools (1-10)</label><input type="number" id="loSc" min="1" max="10"></div>
+    </div>
+    <div class="g3">
+      <div class="f"><label>Amenities (1-10)</label><input type="number" id="loAm" min="1" max="10"></div>
+      <div class="f"><label>Price Fit (1-10)</label><input type="number" id="loPr" min="1" max="10"></div>
+      <div class="f"><label>Community (1-10)</label><input type="number" id="loCo" min="1" max="10"></div>
+    </div>
+    <div class="f"><label>Avg. Property Price (£)</label><input id="loAv" type="number" placeholder="Optional"></div>
+    <div class="f"><label>Notes</label><input id="loNt" placeholder="Pros, cons…"></div>
+    <button class="btn btn-p" onclick="addLoc()">+ Add Location</button>
+  </div>
+  <div id="locCards"></div>
+</div>
+
+<!-- ═══ FIND HOME ═══ -->
+<div class="pg" id="pg-home">
+  <h1 class="sec-t">Find Your Home</h1>
+  <p class="sec-s">Shortlist and compare London properties.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--brick)"></span> Add Property</div>
+    <div class="g2">
+      <div class="f"><label>Property / Project</label><input id="prN" placeholder="e.g. 42 Elm Road, Croydon"></div>
+      <div class="f"><label>Price (£)</label><input id="prP" type="number"></div>
+    </div>
+    <div class="g3">
+      <div class="f"><label>Bedrooms</label><select id="prB"><option>1 Bed</option><option>2 Bed</option><option selected>3 Bed</option><option>4 Bed</option><option>5+ Bed</option></select></div>
+      <div class="f"><label>Type</label><select id="prT"><option>Flat</option><option>Terrace</option><option>Semi-Detached</option><option>Detached</option><option>New Build</option></select></div>
+      <div class="f"><label>Area</label><input id="prA" placeholder="Borough / town"></div>
+    </div>
+    <div class="f"><label>Notes</label><input id="prNt" placeholder="Agent, condition, parking…"></div>
+    <button class="btn btn-p" onclick="addProp()">+ Add Property</button>
+  </div>
+  <div id="propCards"></div>
+</div>
+
+<!-- ═══ TIMELINE ═══ -->
+<div class="pg" id="pg-timeline">
+  <h1 class="sec-t">Your Home Buying Journey</h1>
+  <p class="sec-s">From first savings to getting the keys.</p>
+  <div class="cd"><div class="tl" id="tlView"></div></div>
+</div>
+
+</div><!-- /app -->
+
+<!-- ═══ SYNC MODAL ═══ -->
+<div class="modal-bg" id="syncModal">
+  <div class="modal">
+    <h2>🔗 Google Sheets Sync Setup</h2>
+    <p>Connect to a Google Sheet so you and your wife can both view and update the plan from any device.</p>
+    <div class="step"><div class="step-n">1</div><div class="step-t">Create a new Google Sheet and name it <code>HomePlan Sync</code></div></div>
+    <div class="step"><div class="step-n">2</div><div class="step-t">Go to <code>Extensions → Apps Script</code> and paste the Web App script (provided below). Deploy it as a web app with "Anyone" access.</div></div>
+    <div class="step"><div class="step-n">3</div><div class="step-t">Copy the deployed Web App URL and paste it below.</div></div>
+    <div class="f" style="margin-top:16px"><label>Google Apps Script Web App URL</label><input id="syncUrl" placeholder="https://script.google.com/macros/s/…/exec"></div>
+    <div style="display:flex;gap:10px;margin-top:12px">
+      <button class="btn btn-p" onclick="saveSync()">Save & Connect</button>
+      <button class="btn btn-o" onclick="pushToSheet()">Push Data Now</button>
+      <button class="btn btn-o" onclick="pullFromSheet()">Pull Data</button>
+      <button class="btn btn-o" onclick="closeSyncModal()">Close</button>
+    </div>
+    <div id="syncStatus" style="margin-top:12px;font-size:.78rem;color:var(--teal)"></div>
+    <details style="margin-top:20px">
+      <summary style="cursor:pointer;font-weight:600;font-size:.85rem;color:var(--brick)">📋 Apps Script Code (copy this)</summary>
+      <pre style="background:var(--bg2);padding:14px;border-radius:var(--rs);font-size:.7rem;overflow-x:auto;margin-top:10px;line-height:1.5;white-space:pre-wrap">function doPost(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
+  if (!sheet) sheet = SpreadsheetApp.getActiveSpreadsheet().insertSheet('Data');
+  var data = JSON.parse(e.postData.contents);
+  sheet.clear();
+  sheet.getRange(1,1).setValue(JSON.stringify(data));
+  sheet.getRange(1,2).setValue(new Date().toISOString());
+  return ContentService.createTextOutput(JSON.stringify({status:'ok'}))
+    .setMimeType(ContentService.MimeType.JSON);
+}
+
+function doGet(e) {
+  var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName('Data');
+  if (!sheet) return ContentService.createTextOutput(JSON.stringify({status:'empty'}))
+    .setMimeType(ContentService.MimeType.JSON);
+  var val = sheet.getRange(1,1).getValue();
+  var ts = sheet.getRange(1,2).getValue();
+  return ContentService.createTextOutput(JSON.stringify({status:'ok',data:JSON.parse(val),updated:ts}))
+    .setMimeType(ContentService.MimeType.JSON);
+}</pre>
+    </details>
+  </div>
+</div>
+
+<script>
+// ══════════════════════════════════════
+// CONSTANTS & STORAGE
+// ══════════════════════════════════════
+const SK='hp_london_v4', BDT=163;
+const fmt=n=>{if(!n&&n!==0)return'—';return'£'+Number(n).toLocaleString('en-GB',{maximumFractionDigits:0})};
+const fmtB=n=>'৳'+Math.round(n*BDT).toLocaleString('en-GB');
+const fmtBoth=n=>fmt(n)+' <span class="bdt">('+fmtB(n)+')</span>';
+
+const defaults={
+  savings:[],lenders:[],relLoans:[],locations:[],properties:[],
+  tasks:{finance:[
+    {t:'Consolidate all UK savings (ISA, cash, premium bonds)',d:false},
+    {t:'List any Bangladesh savings to transfer',d:false},
+    {t:'Calculate total available for deposit',d:false},
+    {t:'Set aside emergency fund (3-6 months expenses)',d:false},
+    {t:'Open a Help to Buy ISA or LISA if eligible',d:false},
+  ],bank:[
+    {t:'Check credit score (Experian, Equifax)',d:false},
+    {t:'Get Agreement in Principle (AIP)',d:false},
+    {t:'Compare mortgage rates (fixed vs tracker)',d:false},
+    {t:'Gather documents: payslips, bank statements, ID',d:false},
+    {t:'Understand Help to Buy / Shared Ownership schemes',d:false},
+  ],relatives:[
+    {t:'Discuss amounts and repayment terms with each relative',d:false},
+    {t:'Document agreements in writing',d:false},
+    {t:'Set up standing orders for repayments',d:false},
+    {t:'Clarify if lender (bank) needs gift letters',d:false},
+  ],location:[
+    {t:'Research London boroughs within budget',d:false},
+    {t:'Check Crossrail/Elizabeth Line zones for value',d:false},
+    {t:'Visit shortlisted areas at different times',d:false},
+    {t:'Check Ofsted school ratings nearby',d:false},
+    {t:'Check council tax bands for shortlisted areas',d:false},
+    {t:'Research planned transport/infrastructure projects',d:false},
+  ],home:[
+    {t:'Register on Rightmove, Zoopla, OnTheMarket',d:false},
+    {t:'Contact local estate agents',d:false},
+    {t:'Shortlist 5-10 properties and book viewings',d:false},
+    {t:'Get a RICS Level 2 or 3 survey',d:false},
+    {t:'Instruct solicitor for conveyancing',d:false},
+    {t:'Verify title, leasehold vs freehold terms',d:false},
+    {t:'Make offer and negotiate',d:false},
+    {t:'Exchange contracts and pay deposit',d:false},
+    {t:'Complete and collect keys',d:false},
+  ]},
+  costs:{price:0,deposit:10,buyer:'ftb'},
+  notes:'',syncUrl:''
+};
+
+let D;
+try{D=JSON.parse(localStorage.getItem(SK))||JSON.parse(JSON.stringify(defaults))}catch(e){D=JSON.parse(JSON.stringify(defaults))}
+// Migrate
+if(!D.tasks)D.tasks=defaults.tasks;
+if(!D.relLoans)D.relLoans=[];
+if(!D.costs)D.costs=defaults.costs;
+function save(){try{localStorage.setItem(SK,JSON.stringify(D))}catch(e){}}
+
+// ══════════════════════════════════════
+// NAVIGATION
+// ══════════════════════════════════════
+document.querySelectorAll('.tab').forEach(t=>t.addEventListener('click',()=>{
+  document.querySelectorAll('.tab').forEach(x=>x.classList.remove('active'));
+  document.querySelectorAll('.pg').forEach(x=>x.classList.remove('act'));
+  t.classList.add('active');
+  document.getElementById('pg-'+t.dataset.p).classList.add('act');
+  if(t.dataset.p==='dash')renderDash();if(t.dataset.p==='timeline')renderTL();
+}));
+document.querySelectorAll('.itab').forEach(t=>t.addEventListener('click',()=>{
+  const p=t.closest('.pg');
+  p.querySelectorAll('.itab').forEach(x=>x.classList.remove('act'));
+  p.querySelectorAll('.ipan').forEach(x=>x.classList.remove('act'));
+  t.classList.add('act');p.querySelector('#'+t.dataset.ip).classList.add('act');
+}));
+
+// ══════════════════════════════════════
+// STAMP DUTY CALCULATOR
+// ══════════════════════════════════════
+function calcSDLT(price, type){
+  let bands,extra=0;
+  if(type==='ftb'){
+    if(price<=300000) return 0;
+    if(price<=500000) return (price-300000)*0.05;
+    // Over 500k = no FTB relief, fall through to standard
+    bands=[[125000,0],[125000,0.02],[675000,0.05],[575000,0.10],[Infinity,0.12]];
+  } else {
+    bands=[[125000,0],[125000,0.02],[675000,0.05],[575000,0.10],[Infinity,0.12]];
+    if(type==='add') extra=0.05;
+  }
+  let tax=0,rem=price;
+  for(const [w,r] of bands){
+    const chunk=Math.min(rem,w);
+    tax+=chunk*(r+extra);
+    rem-=chunk;
+    if(rem<=0)break;
+  }
+  return Math.round(tax);
+}
+
+function calcCosts(){
+  const price=Number(document.getElementById('cPrice').value)||0;
+  const dep=Number(document.getElementById('cDeposit').value)||10;
+  const buyer=document.getElementById('cBuyer').value;
+  D.costs={price,deposit:dep,buyer};save();
+  if(!price){document.getElementById('costList').innerHTML='<p style="color:var(--ink3)">Enter a property price to see breakdown.</p>';return}
+
+  const depAmt=Math.round(price*dep/100);
+  const mortgage=price-depAmt;
+  const sdlt=calcSDLT(price,buyer);
+  const convey=Math.round(price<400000?1400:1800);
+  const searches=350;
+  const landReg=price<300000?270:price<500000?270:price<1000000?540:910;
+  const survey=price<400000?600:price<600000?800:1200;
+  const mortFee=999;
+  const mortVal=0;
+  const removals=price<400000?600:1000;
+  const insurance=300;
+  const furnish=3000;
+
+  const items=[
+    {cat:'Property',rows:[
+      ['Purchase Price',price],['Deposit ('+dep+'%)',depAmt],['Mortgage Required',mortgage]
+    ]},
+    {cat:'Government Taxes',rows:[
+      ['Stamp Duty (SDLT)',sdlt]
+    ]},
+    {cat:'Legal & Surveys',rows:[
+      ['Conveyancing / Solicitor',convey],['Local Searches & Disbursements',searches],
+      ['Land Registry Fee',landReg],['Property Survey (RICS Level 2/3)',survey]
+    ]},
+    {cat:'Mortgage Costs',rows:[
+      ['Mortgage Arrangement Fee',mortFee],['Mortgage Valuation',mortVal]
+    ]},
+    {cat:'Moving & Setup',rows:[
+      ['Removals / Moving',removals],['Home Insurance (initial)',insurance],
+      ['Furniture & Initial Repairs',furnish]
+    ]}
+  ];
+  const totalExtra=sdlt+convey+searches+landReg+survey+mortFee+mortVal+removals+insurance+furnish;
+  const grandTotal=price+totalExtra;
+
+  let html='';
+  items.forEach(g=>{
+    html+=`<div class="cost-cat">${g.cat}</div>`;
+    g.rows.forEach(([l,v])=>{
+      html+=`<div class="cost-row"><span class="cr-l">${l}</span><span class="cr-v">${fmt(v)} <span class="bdt">(${fmtB(v)})</span></span></div>`;
+    });
+  });
+  html+=`<div class="cost-cat">Summary</div>`;
+  html+=`<div class="cost-row"><span class="cr-l">Additional Costs (excl. property)</span><span class="cr-v" style="color:var(--brick)">${fmt(totalExtra)}</span></div>`;
+  html+=`<div class="cost-total"><span>Grand Total</span><span>${fmt(grandTotal)} <span class="bdt" style="font-weight:400">(${fmtB(grandTotal)})</span></span></div>`;
+  document.getElementById('costList').innerHTML=html;
+}
+
+// ══════════════════════════════════════
+// SAVINGS
+// ══════════════════════════════════════
+function renderSav(){
+  const tb=document.getElementById('savBody');tb.innerHTML='';
+  let total=0;
+  D.savings.forEach((s,i)=>{
+    total+=Number(s.a)||0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:500">${s.n}</td><td>${fmt(s.a)}</td><td style="color:var(--ink3);font-size:.78rem">${fmtB(s.a)}</td>
+      <td><span class="tag ${s.s==='Available'?'tag-uk':s.s==='Locked'?'tag-bd':'tag-bank'}">${s.s}</span></td>
+      <td><button class="btn-x" onclick="D.savings.splice(${i},1);save();renderSav()">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('totSav').textContent=fmt(total);
+  document.getElementById('totSavBDT').textContent=fmtB(total);
+}
+function addSav(){
+  const n=document.getElementById('sName').value.trim(),a=Number(document.getElementById('sAmt').value),s=document.getElementById('sStatus').value;
+  if(!n)return;D.savings.push({n,a,s});document.getElementById('sName').value='';document.getElementById('sAmt').value='';save();renderSav();
+}
+
+// ══════════════════════════════════════
+// MORTGAGE
+// ══════════════════════════════════════
+function calcMort(){
+  const P=Number(document.getElementById('mAmt').value)||0;
+  const r=(Number(document.getElementById('mRate').value)||4.5)/1200;
+  const n=(Number(document.getElementById('mTerm').value)||25)*12;
+  if(!P)return;
+  const emi=P*r*Math.pow(1+r,n)/(Math.pow(1+r,n)-1);
+  const tot=emi*n,int_=tot-P;
+  document.getElementById('mEmi').textContent=fmt(Math.round(emi));
+  document.getElementById('mEmiBDT').textContent=fmtB(Math.round(emi));
+  document.getElementById('mInt').textContent=fmt(Math.round(int_));
+  document.getElementById('mTot').textContent=fmt(Math.round(tot));
+  // Pie
+  const pPct=(P/tot*100).toFixed(1),iPct=(int_/tot*100).toFixed(1);
+  document.getElementById('mortPie').innerHTML=`
+    <div class="pie-r" style="background:conic-gradient(var(--navy) 0% ${pPct}%, var(--brick) ${pPct}% 100%)">
+      <div class="pie-c"><span>${fmt(Math.round(tot))}</span><span>Total</span></div>
+    </div>
+    <div class="pie-lg">
+      <div class="pie-li"><span class="d" style="background:var(--navy)"></span>Principal<span class="v">${pPct}%</span></div>
+      <div class="pie-li"><span class="d" style="background:var(--brick)"></span>Interest<span class="v">${iPct}%</span></div>
+    </div>`;
+}
+
+// ══════════════════════════════════════
+// LENDERS
+// ══════════════════════════════════════
+function renderLenders(){
+  const c=document.getElementById('lenderList');c.innerHTML='';
+  if(!D.lenders.length){c.innerHTML='<p style="color:var(--ink3);font-size:.85rem">No lenders added yet.</p>';return}
+  const best=D.lenders.reduce((a,b)=>Number(a.r)<Number(b.r)?a:b);
+  D.lenders.forEach((l,i)=>{
+    const ib=l===best&&D.lenders.length>1;
+    c.innerHTML+=`<div class="rp-card"><button class="btn-x" style="position:absolute;top:10px;right:10px" onclick="D.lenders.splice(${i},1);save();renderLenders()">✕</button>
+      <div class="rp-name">${l.n} ${ib?'<span class="tag tag-uk">★ Best Rate</span>':''}</div>
+      <div class="rp-amt">${l.r}% — ${l.t}</div>
+      <div class="rp-meta">Fee: ${l.f||'—'} · ${l.nt||''}</div></div>`;
+  });
+}
+function addLender(){
+  const n=document.getElementById('lkN').value.trim();if(!n)return;
+  D.lenders.push({n,r:Number(document.getElementById('lkR').value)||0,t:document.getElementById('lkT').value,f:document.getElementById('lkF').value,nt:document.getElementById('lkNt').value});
+  ['lkN','lkR','lkF','lkNt'].forEach(id=>document.getElementById(id).value='');save();renderLenders();
+}
+
+// ══════════════════════════════════════
+// RELATIVE LOANS (with repayment timeline)
+// ══════════════════════════════════════
+function renderRelLoans(){
+  const c=document.getElementById('relCards');c.innerHTML='';
+  let totalBorrowed=0,totalRepaid=0;
+  const now=new Date();
+
+  D.relLoans.forEach((rl,i)=>{
+    totalBorrowed+=Number(rl.a)||0;
+    const monthly=Math.round(rl.a/rl.m);
+    const start=new Date(rl.s+'-01');
+
+    // Build monthly timeline
+    let tlHtml='',paid=0;
+    for(let mo=0;mo<rl.m;mo++){
+      const d=new Date(start);d.setMonth(d.getMonth()+mo);
+      const isPast=d<=now;
+      if(isPast)paid+=monthly;
+      const moLabel=d.toLocaleDateString('en-GB',{month:'short',year:'numeric'});
+      const isLast=mo===rl.m-1;
+      const thisAmt=isLast?rl.a-(monthly*(rl.m-1)):monthly;
+      tlHtml+=`<div class="rp-mo" style="${isPast?'color:var(--teal)':''}">
+        <span>${isPast?'✓ ':''}${moLabel}</span>
+        <span>${fmt(thisAmt)} <span class="bdt">(${fmtB(thisAmt)})</span></span>
+      </div>`;
+    }
+    const endDate=new Date(start);endDate.setMonth(endDate.getMonth()+rl.m-1);
+    const pctDone=Math.min(100,Math.round(paid/rl.a*100));
+    totalRepaid+=paid;
+
+    c.innerHTML+=`<div class="rp-card">
+      <button class="btn-x" style="position:absolute;top:10px;right:10px" onclick="D.relLoans.splice(${i},1);save();renderRelLoans()">✕</button>
+      <div style="display:flex;align-items:center;gap:8px">
+        <div class="rp-name">${rl.n}</div>
+        <span class="tag ${rl.b==='uk'?'tag-uk':'tag-bd'}">${rl.b==='uk'?'🇬🇧 UK':'🇧🇩 BD'}</span>
+      </div>
+      <div class="rp-amt">${fmt(rl.a)} <span style="font-size:.78rem;color:var(--ink3)">(${fmtB(rl.a)})</span></div>
+      <div class="rp-meta">
+        ${fmt(monthly)}/month for ${rl.m} months · Deadline: ${endDate.toLocaleDateString('en-GB',{month:'long',year:'numeric'})}
+        ${rl.nt?'<br>'+rl.nt:''}
+      </div>
+      <div class="rp-pbar"><div class="rp-pfill" style="width:${pctDone}%"></div></div>
+      <div style="font-size:.7rem;color:var(--ink3);margin-top:4px">${pctDone}% repaid (${fmt(paid)} of ${fmt(rl.a)})</div>
+      <details style="margin-top:10px"><summary style="cursor:pointer;font-size:.78rem;font-weight:600;color:var(--brick)">📅 Monthly Repayment Schedule</summary>
+        <div class="rp-timeline" style="margin-top:8px">${tlHtml}</div>
+      </details>
+    </div>`;
+  });
+
+  document.getElementById('relTotal').innerHTML=D.relLoans.length?`
+    <div class="big">${fmt(totalBorrowed)}</div>
+    <div class="lbl">Total Borrowed from Relatives</div>
+    <div class="sub">${fmtB(totalBorrowed)} · ${fmt(totalRepaid)} repaid so far</div>`:'';
+}
+function addRelLoan(){
+  const n=document.getElementById('rlN').value.trim();if(!n)return;
+  D.relLoans.push({n,a:Number(document.getElementById('rlA').value)||0,b:document.getElementById('rlB').value,m:Number(document.getElementById('rlM').value)||12,s:document.getElementById('rlS').value||'2026-09',nt:document.getElementById('rlNt').value});
+  ['rlN','rlA','rlNt'].forEach(id=>document.getElementById(id).value='');save();renderRelLoans();
+}
+
+// ══════════════════════════════════════
+// LOCATIONS
+// ══════════════════════════════════════
+function renderLocs(){
+  const c=document.getElementById('locCards');c.innerHTML='';
+  if(!D.locations.length){c.innerHTML='<p style="color:var(--ink3);font-size:.85rem;padding:12px 0">No locations scored yet.</p>';return}
+  const cols=['var(--brick)','var(--teal)','var(--navy)','var(--amber)','var(--plum)','var(--green)'];
+  const labels=['Commute','Safety','Schools','Amenities','Price Fit','Community'];
+  const keys=['c','sf','sc','am','pr','co'];
+  D.locations.forEach((l,i)=>{
+    const avg=(keys.reduce((s,k)=>s+Number(l[k]||5),0)/6).toFixed(1);
+    let bars='';keys.forEach((k,j)=>{
+      bars+=`<div class="sb"><div class="sb-h"><span>${labels[j]}</span><span>${l[k]}/10</span></div><div class="sb-t"><div class="sb-f" style="width:${l[k]*10}%;background:${cols[j]}"></div></div></div>`;
+    });
+    c.innerHTML+=`<div class="cd" style="margin-top:12px">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div><div style="font-weight:700;font-size:1.05rem">${l.n}</div>
+          ${l.av?'<div style="font-size:.82rem;color:var(--ink3)">Avg price: '+fmt(l.av)+'</div>':''}
+          ${l.nt?'<div style="font-size:.78rem;color:var(--ink3);margin-top:2px">'+l.nt+'</div>':''}
+        </div>
+        <div style="display:flex;align-items:center;gap:8px">
+          <div style="text-align:right"><span style="font-family:'Fraunces',serif;font-size:1.4rem;color:var(--brick)">${avg}</span><span style="font-size:.7rem;color:var(--ink3)">/10</span></div>
+          <button class="btn-x" onclick="D.locations.splice(${i},1);save();renderLocs()">✕</button>
+        </div>
+      </div>
+      <div style="margin-top:14px">${bars}</div></div>`;
+  });
+}
+function addLoc(){
+  const n=document.getElementById('loN').value.trim();if(!n)return;
+  D.locations.push({n,c:document.getElementById('loC').value||5,sf:document.getElementById('loSf').value||5,sc:document.getElementById('loSc').value||5,am:document.getElementById('loAm').value||5,pr:document.getElementById('loPr').value||5,co:document.getElementById('loCo').value||5,av:document.getElementById('loAv').value,nt:document.getElementById('loNt').value});
+  ['loN','loC','loSf','loSc','loAm','loPr','loCo','loAv','loNt'].forEach(id=>document.getElementById(id).value='');save();renderLocs();
+}
+
+// ══════════════════════════════════════
+// PROPERTIES
+// ══════════════════════════════════════
+function renderProps(){
+  const c=document.getElementById('propCards');c.innerHTML='';
+  if(!D.properties.length){c.innerHTML='<p style="color:var(--ink3);font-size:.85rem;padding:12px 0">No properties added yet.</p>';return}
+  D.properties.forEach((p,i)=>{
+    c.innerHTML+=`<div class="rp-card" style="margin-top:12px">
+      <button class="btn-x" style="position:absolute;top:10px;right:10px" onclick="D.properties.splice(${i},1);save();renderProps()">✕</button>
+      <div class="rp-name">${p.n}</div>
+      <div class="rp-amt">${fmt(p.p)} <span style="font-size:.78rem;color:var(--ink3)">(${fmtB(p.p)})</span></div>
+      <div class="rp-meta">${p.b} · ${p.t} · ${p.a}<br>${p.nt||''}</div></div>`;
+  });
+}
+function addProp(){
+  const n=document.getElementById('prN').value.trim();if(!n)return;
+  D.properties.push({n,p:Number(document.getElementById('prP').value)||0,b:document.getElementById('prB').value,t:document.getElementById('prT').value,a:document.getElementById('prA').value,nt:document.getElementById('prNt').value});
+  ['prN','prP','prA','prNt'].forEach(id=>document.getElementById(id).value='');save();renderProps();
+}
+
+// ══════════════════════════════════════
+// TASKS (generic)
+// ══════════════════════════════════════
+function renderTasks(cat,el){
+  // Not rendered separately — used in dashboard
+}
+
+// ══════════════════════════════════════
+// DASHBOARD
+// ══════════════════════════════════════
+function renderDash(){
+  const allTasks=Object.values(D.tasks).flat();
+  const done=allTasks.filter(t=>t.d).length;
+  const pct=allTasks.length?Math.round(done/allTasks.length*100):0;
+  const totSav=D.savings.reduce((s,x)=>s+(Number(x.a)||0),0);
+  const totRel=D.relLoans.reduce((s,x)=>s+(Number(x.a)||0),0);
+  const mortAmt=Number(document.getElementById('mAmt')?.value)||0;
+
+  document.getElementById('dashStats').innerHTML=`
+    <div class="st c1"><div class="st-v">${pct}%</div><div class="st-l">Progress</div></div>
+    <div class="st c2"><div class="st-v">${fmt(totSav)}</div><div class="st-l">My Savings</div></div>
+    <div class="st c3"><div class="st-v">${fmt(mortAmt)}</div><div class="st-l">Bank Mortgage</div></div>
+    <div class="st c4"><div class="st-v">${fmt(totRel)}</div><div class="st-l">Relative Loans</div></div>
+    <div class="st c5"><div class="st-v">${D.properties.length}</div><div class="st-l">Properties</div></div>`;
+
+  // Funding pie
+  const total=totSav+mortAmt+totRel;
+  const slices=[{l:'Savings',v:totSav,c:'var(--teal)'},{l:'Bank Mortgage',v:mortAmt,c:'var(--navy)'},{l:'Relative Loans',v:totRel,c:'var(--plum)'}];
+  let cum=0;
+  const grad=slices.map(s=>{const st=cum;const sz=total?(s.v/total*100):0;cum+=sz;return`${s.c} ${st}% ${cum}%`}).join(',');
+  document.getElementById('fundPie').innerHTML=total?`
+    <div class="pie-r" style="background:conic-gradient(${grad})"><div class="pie-c"><span>${fmt(total)}</span><span>Total Funds</span></div></div>
+    <div class="pie-lg">${slices.map(s=>`<div class="pie-li"><span class="d" style="background:${s.c}"></span>${s.l}<span class="v">${fmt(s.v)}</span></div>`).join('')}</div>`
+    :'<p style="color:var(--ink3);font-size:.85rem">Add savings, mortgage and relative loan data to see breakdown.</p>';
+
+  // Progress bars
+  const cats=[{k:'finance',l:'Finance',ic:'💰'},{k:'bank',l:'Bank Mortgage',ic:'🏦'},{k:'relatives',l:'Relative Loans',ic:'👨‍👩‍👦'},{k:'location',l:'Location',ic:'📍'},{k:'home',l:'Find Home',ic:'🔑'}];
+  document.getElementById('dashProgress').innerHTML=cats.map(c=>{
+    const ts=D.tasks[c.k]||[];const dn=ts.filter(t=>t.d).length;const p=ts.length?Math.round(dn/ts.length*100):0;
+    return`<div style="display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--bg2);cursor:pointer" onclick="document.querySelector('[data-p=${c.k==='bank'?'bank':c.k==='relatives'?'relatives':c.k}]')?.click()">
+      <span style="font-size:1.1rem">${c.ic}</span>
+      <div style="flex:1"><div style="font-size:.84rem;font-weight:500">${c.l}</div>
+        <div style="height:4px;background:var(--bg2);border-radius:99px;margin-top:5px;overflow:hidden"><div style="height:100%;width:${p}%;background:${p===100?'var(--green)':'var(--brick)'};border-radius:99px;transition:width .5s"></div></div>
+      </div>
+      <span style="font-size:.75rem;font-weight:600;color:${p===100?'var(--green)':'var(--ink3)'}"> ${dn}/${ts.length}</span>
+    </div>`;
+  }).join('');
+}
+
+// ══════════════════════════════════════
+// TIMELINE
+// ══════════════════════════════════════
+function renderTL(){
+  const phases=[
+    {t:'Financial Assessment',d:'Calculate savings, plan deposit, open LISA if eligible',k:'finance'},
+    {t:'Loan from Relatives',d:'Discuss amounts, agree repayment terms, get gift letters',k:'relatives'},
+    {t:'Bank Mortgage',d:'Credit check, AIP, compare rates, gather documents',k:'bank'},
+    {t:'Choose Location',d:'Research boroughs, visit areas, check schools & transport',k:'location'},
+    {t:'Property Search',d:'Register on portals, book viewings, shortlist',k:'home'},
+    {t:'Legal & Survey',d:'Instruct solicitor, property survey, title checks',k:null},
+    {t:'Exchange & Complete',d:'Exchange contracts, pay deposit, complete, collect keys',k:null},
+    {t:'Move In',d:'Removals, utilities setup, council tax registration',k:null},
+  ];
+  const tl=document.getElementById('tlView');tl.innerHTML='';
+  let foundActive=false;
+  phases.forEach(ph=>{
+    const ts=ph.k?D.tasks[ph.k]:[];
+    const allDone=ts.length&&ts.every(t=>t.d);
+    let cls='tl-i';
+    if(allDone&&ph.k)cls+=' dn';
+    else if(!foundActive){cls+=' ac';foundActive=true}
+    tl.innerHTML+=`<div class="${cls}"><div class="tl-d"></div><div class="tl-box">
+      <div class="tl-tt">${ph.t}</div>
+      <div class="tl-mt">${ph.d}${ph.k?' · '+ts.filter(t=>t.d).length+'/'+ts.length+' tasks':''}</div>
+    </div></div>`;
+  });
+}
+
+// ══════════════════════════════════════
+// GOOGLE SHEETS SYNC
+// ══════════════════════════════════════
+function openSync(){document.getElementById('syncModal').classList.add('open');document.getElementById('syncUrl').value=D.syncUrl||''}
+function closeSyncModal(){document.getElementById('syncModal').classList.remove('open')}
+function saveSync(){D.syncUrl=document.getElementById('syncUrl').value.trim();save();document.getElementById('syncStatus').textContent='✓ URL saved!';}
+function pushToSheet(){
+  const url=D.syncUrl;if(!url){alert('Please save a sync URL first');return}
+  document.getElementById('syncStatus').textContent='Pushing data…';
+  fetch(url,{method:'POST',mode:'no-cors',headers:{'Content-Type':'application/json'},body:JSON.stringify(D)})
+    .then(()=>{document.getElementById('syncStatus').textContent='✓ Data pushed to Google Sheet!';})
+    .catch(e=>{document.getElementById('syncStatus').textContent='Error: '+e.message});
+}
+function pullFromSheet(){
+  const url=D.syncUrl;if(!url){alert('Please save a sync URL first');return}
+  document.getElementById('syncStatus').textContent='Pulling data…';
+  fetch(url).then(r=>r.json()).then(j=>{
+    if(j.status==='ok'&&j.data){D=j.data;save();location.reload();}
+    else document.getElementById('syncStatus').textContent='No data found on sheet.';
+  }).catch(e=>{document.getElementById('syncStatus').textContent='Error: '+e.message});
+}
+
+// ══════════════════════════════════════
+// NOTES
+// ══════════════════════════════════════
+const nEl=document.getElementById('gNotes');nEl.value=D.notes||'';nEl.addEventListener('input',()=>{D.notes=nEl.value;save()});
+
+// ══════════════════════════════════════
+// INIT
+// ══════════════════════════════════════
+if(D.costs.price){document.getElementById('cPrice').value=D.costs.price;document.getElementById('cDeposit').value=D.costs.deposit;document.getElementById('cBuyer').value=D.costs.buyer;}
+calcCosts();renderSav();renderLenders();renderRelLoans();renderLocs();renderProps();calcMort();renderDash();
+</script>
+</body>
+</html>
