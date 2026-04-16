@@ -225,6 +225,9 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-h
     <div class="tab" data-p="relatives">Relative Loans</div>
     <div class="tab" data-p="location">Location</div>
     <div class="tab" data-p="home">Find Home</div>
+    <div class="tab" data-p="docs">Documents</div>
+    <div class="tab" data-p="budget">Monthly Budget</div>
+    <div class="tab" data-p="moving">Moving Day</div>
     <div class="tab" data-p="timeline">Timeline</div>
   </div>
   <div class="sync-bar" id="syncBar" onclick="openSync()">
@@ -404,6 +407,89 @@ body{font-family:'Outfit',sans-serif;background:var(--bg);color:var(--ink);min-h
   <div id="propCards"></div>
 </div>
 
+<!-- ═══ DOCUMENTS CHECKLIST ═══ -->
+<div class="pg" id="pg-docs">
+  <h1 class="sec-t">Documents & Paperwork</h1>
+  <p class="sec-s">Track every document needed for your home purchase — from mortgage to completion.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--navy)"></span> Mortgage Application Documents</div>
+    <div id="docsMortgage"></div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--teal)"></span> Solicitor / Conveyancing</div>
+    <div id="docsSolicitor"></div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--plum)"></span> Family Loan Letters</div>
+    <div id="docsFamily"></div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--amber)"></span> After Completion</div>
+    <div id="docsAfter"></div>
+  </div>
+</div>
+
+<!-- ═══ MONTHLY BUDGET ═══ -->
+<div class="pg" id="pg-budget">
+  <h1 class="sec-t">Monthly Budget After Purchase</h1>
+  <p class="sec-s">Plan your monthly outgoings once you own the home. All in £ with ৳ equivalents.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--brick)"></span> Monthly Outgoings</div>
+    <table class="tb">
+      <thead><tr><th>Item</th><th>Amount (£/month)</th><th>BDT Equiv.</th><th></th></tr></thead>
+      <tbody id="budgetBody"></tbody>
+    </table>
+    <div class="g2 ar" style="margin-top:16px">
+      <input id="bgName" placeholder="Item (e.g. Council Tax, Gas)">
+      <input id="bgAmt" type="number" placeholder="Monthly £">
+    </div>
+    <button class="btn btn-p" onclick="addBudgetItem()" style="margin-top:10px">+ Add Item</button>
+    <div class="g2" style="margin-top:20px">
+      <div class="rb rb-brick">
+        <div class="big" id="budgetTotal">£0</div>
+        <div class="lbl">Total Monthly Outgoings</div>
+        <div class="sub" id="budgetTotalBDT"></div>
+      </div>
+      <div class="rb rb-teal">
+        <div class="big" id="budgetYearly">£0</div>
+        <div class="lbl">Yearly Cost</div>
+        <div class="sub" id="budgetYearlyBDT"></div>
+      </div>
+    </div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--teal)"></span> Pre-filled Common UK Costs</div>
+    <p style="font-size:.82rem;color:var(--ink3);margin-bottom:12px">Click any item below to add it to your budget with a typical London-area amount.</p>
+    <div id="presetBudget" style="display:flex;flex-wrap:wrap;gap:8px"></div>
+  </div>
+</div>
+
+<!-- ═══ MOVING DAY ═══ -->
+<div class="pg" id="pg-moving">
+  <h1 class="sec-t">Moving Day Planner</h1>
+  <p class="sec-s">Everything to do before, during, and after moving into your new home.</p>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--brick)"></span> 2 Weeks Before</div>
+    <div id="moveBefore"></div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--amber)"></span> Moving Week</div>
+    <div id="moveWeek"></div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--teal)"></span> First Week in New Home</div>
+    <div id="moveAfter"></div>
+  </div>
+  <div class="cd">
+    <div class="cd-lbl"><span class="dt" style="background:var(--navy)"></span> Custom Tasks</div>
+    <div id="moveCustom"></div>
+    <div class="ar">
+      <input id="moveNewTask" placeholder="Add a custom moving task…">
+      <button class="btn btn-p" onclick="addMoveTask()" style="flex-shrink:0">+ Add</button>
+    </div>
+  </div>
+</div>
+
 <!-- ═══ TIMELINE ═══ -->
 <div class="pg" id="pg-timeline">
   <h1 class="sec-t">Your Home Buying Journey</h1>
@@ -504,6 +590,75 @@ const defaults={
     {t:'Complete and collect keys',d:false},
   ]},
   costs:{price:0,deposit:10,buyer:'ftb'},
+  budgetItems:[],
+  docs:{
+    mortgage:[
+      {t:'Passport / photo ID (both applicants)',d:false},
+      {t:'Proof of address (utility bill, bank statement)',d:false},
+      {t:'Last 3 months payslips',d:false},
+      {t:'Last 3 months bank statements (all accounts)',d:false},
+      {t:'P60 / tax return (last 2 years)',d:false},
+      {t:'Employment contract or reference letter',d:false},
+      {t:'Credit report (Experian / Equifax)',d:false},
+      {t:'Proof of deposit source (savings statements)',d:false},
+      {t:'Agreement in Principle (AIP) letter',d:false},
+    ],
+    solicitor:[
+      {t:'Mortgage offer letter (from lender)',d:false},
+      {t:'Property survey report (RICS Level 2/3)',d:false},
+      {t:'Title deeds / Land Registry records',d:false},
+      {t:'Local authority search results',d:false},
+      {t:'Environmental / drainage search results',d:false},
+      {t:'Fixtures & fittings form (TA10)',d:false},
+      {t:'Property information form (TA6)',d:false},
+      {t:'Leasehold pack (if leasehold)',d:false},
+      {t:'Buildings insurance (required before exchange)',d:false},
+    ],
+    family:[
+      {t:'Gift letter from each relative (for deposit)',d:false},
+      {t:'Relative\'s bank statement showing funds source',d:false},
+      {t:'Relative\'s ID (passport copy)',d:false},
+      {t:'Written loan agreement (if loan, not gift)',d:false},
+      {t:'Proof of relationship (if lender requires)',d:false},
+    ],
+    after:[
+      {t:'Completion statement from solicitor',d:false},
+      {t:'Title register in your name (Land Registry)',d:false},
+      {t:'Stamp duty receipt (SDLT5)',d:false},
+      {t:'Buildings insurance policy active',d:false},
+      {t:'Council tax registration',d:false},
+      {t:'Utility account transfers (gas, electric, water)',d:false},
+    ]
+  },
+  moving:{
+    before:[
+      {t:'Book removal company / van hire',d:false},
+      {t:'Start packing non-essentials',d:false},
+      {t:'Redirect mail (Royal Mail redirect service)',d:false},
+      {t:'Notify bank, employer, GP, DVLA of address change',d:false},
+      {t:'Arrange broadband/internet for new address',d:false},
+      {t:'Confirm completion date with solicitor',d:false},
+      {t:'Pack a "first night" box (kettle, bedding, chargers, toiletries)',d:false},
+    ],
+    week:[
+      {t:'Defrost fridge/freezer',d:false},
+      {t:'Take meter readings at old property',d:false},
+      {t:'Collect keys from estate agent / solicitor',d:false},
+      {t:'Take meter readings at new property',d:false},
+      {t:'Check all rooms, run taps, test boiler',d:false},
+      {t:'Change locks (recommended)',d:false},
+    ],
+    after:[
+      {t:'Register with local council for council tax',d:false},
+      {t:'Register with local GP surgery',d:false},
+      {t:'Register with local dentist',d:false},
+      {t:'Set up direct debits for bills',d:false},
+      {t:'Update electoral roll (register to vote)',d:false},
+      {t:'Introduce yourself to neighbours',d:false},
+      {t:'Locate stopcock, fuse box, boiler controls',d:false},
+    ],
+    custom:[]
+  },
   notes:'',syncUrl:''
 };
 
@@ -513,6 +668,9 @@ try{D=JSON.parse(localStorage.getItem(SK))||JSON.parse(JSON.stringify(defaults))
 if(!D.tasks)D.tasks=defaults.tasks;
 if(!D.relLoans)D.relLoans=[];
 if(!D.costs)D.costs=defaults.costs;
+if(!D.docs)D.docs=defaults.docs;
+if(!D.moving)D.moving=defaults.moving;
+if(!D.budgetItems)D.budgetItems=[];
 function save(){try{localStorage.setItem(SK,JSON.stringify(D))}catch(e){}}
 
 // ══════════════════════════════════════
@@ -1044,6 +1202,95 @@ setInterval(()=>{
 }, 5 * 60 * 1000);
 
 // ══════════════════════════════════════
+// DOCUMENTS CHECKLIST
+// ══════════════════════════════════════
+function renderDocList(cat, elId){
+  const el=document.getElementById(elId);el.innerHTML='';
+  D.docs[cat].forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.className='tk'+(t.d?' dn':'');
+    div.innerHTML=`<div class="tk-c">${t.d?'✓':''}</div><div class="tk-n">${t.t}</div>`;
+    div.addEventListener('click',()=>{t.d=!t.d;save();renderDocList(cat,elId)});
+    el.appendChild(div);
+  });
+}
+function renderAllDocs(){
+  renderDocList('mortgage','docsMortgage');
+  renderDocList('solicitor','docsSolicitor');
+  renderDocList('family','docsFamily');
+  renderDocList('after','docsAfter');
+}
+
+// ══════════════════════════════════════
+// MONTHLY BUDGET
+// ══════════════════════════════════════
+const budgetPresets=[
+  {n:'Mortgage Payment',a:1500},{n:'Council Tax',a:170},{n:'Gas & Electric',a:150},
+  {n:'Water',a:40},{n:'Broadband',a:35},{n:'TV Licence',a:14},
+  {n:'Home Insurance',a:30},{n:'Life Insurance',a:25},{n:'Groceries',a:400},
+  {n:'Transport / Oyster',a:180},{n:'Phone Bills (2)',a:50},{n:'Service Charge (flat)',a:150},
+  {n:'Ground Rent (leasehold)',a:25},{n:'Relative Loan Repayments',a:500},
+];
+
+function renderBudget(){
+  const tb=document.getElementById('budgetBody');tb.innerHTML='';
+  let total=0;
+  D.budgetItems.forEach((b,i)=>{
+    total+=Number(b.a)||0;
+    const tr=document.createElement('tr');
+    tr.innerHTML=`<td style="font-weight:500">${b.n}</td><td>${fmt(b.a)}</td><td style="color:var(--ink3);font-size:.78rem">${fmtB(b.a)}</td>
+      <td><button class="btn-x" onclick="D.budgetItems.splice(${i},1);save();renderBudget()">✕</button></td>`;
+    tb.appendChild(tr);
+  });
+  document.getElementById('budgetTotal').textContent=fmt(total);
+  document.getElementById('budgetTotalBDT').textContent=fmtB(total);
+  document.getElementById('budgetYearly').textContent=fmt(total*12);
+  document.getElementById('budgetYearlyBDT').textContent=fmtB(total*12);
+}
+function addBudgetItem(){
+  const n=document.getElementById('bgName').value.trim(),a=Number(document.getElementById('bgAmt').value);
+  if(!n)return;D.budgetItems.push({n,a});document.getElementById('bgName').value='';document.getElementById('bgAmt').value='';save();renderBudget();
+}
+function renderBudgetPresets(){
+  const el=document.getElementById('presetBudget');el.innerHTML='';
+  budgetPresets.forEach(p=>{
+    const btn=document.createElement('button');
+    btn.className='btn btn-o';btn.style.fontSize='.74rem';btn.style.padding='6px 12px';
+    btn.textContent=p.n+' ('+fmt(p.a)+')';
+    btn.addEventListener('click',()=>{
+      D.budgetItems.push({n:p.n,a:p.a});save();renderBudget();
+      btn.textContent='✓ Added';btn.disabled=true;btn.style.opacity='.4';
+    });
+    el.appendChild(btn);
+  });
+}
+
+// ══════════════════════════════════════
+// MOVING DAY
+// ══════════════════════════════════════
+function renderMoveList(cat, elId){
+  const el=document.getElementById(elId);el.innerHTML='';
+  D.moving[cat].forEach((t,i)=>{
+    const div=document.createElement('div');
+    div.className='tk'+(t.d?' dn':'');
+    div.innerHTML=`<div class="tk-c">${t.d?'✓':''}</div><div class="tk-n">${t.t}</div>`;
+    div.addEventListener('click',()=>{t.d=!t.d;save();renderMoveList(cat,elId)});
+    el.appendChild(div);
+  });
+}
+function renderAllMoving(){
+  renderMoveList('before','moveBefore');
+  renderMoveList('week','moveWeek');
+  renderMoveList('after','moveAfter');
+  renderMoveList('custom','moveCustom');
+}
+function addMoveTask(){
+  const input=document.getElementById('moveNewTask');
+  const text=input.value.trim();if(!text)return;
+  D.moving.custom.push({t:text,d:false});input.value='';save();renderAllMoving();
+}
+
+// ══════════════════════════════════════
 // NOTES
 // ══════════════════════════════════════
 const nEl=document.getElementById('gNotes');nEl.value=D.notes||'';nEl.addEventListener('input',()=>{D.notes=nEl.value;save()});
@@ -1052,7 +1299,7 @@ const nEl=document.getElementById('gNotes');nEl.value=D.notes||'';nEl.addEventLi
 // INIT
 // ══════════════════════════════════════
 if(D.costs.price){document.getElementById('cPrice').value=D.costs.price;document.getElementById('cDeposit').value=D.costs.deposit;document.getElementById('cBuyer').value=D.costs.buyer;}
-calcCosts();renderSav();renderLenders();renderRelLoans();renderLocs();renderProps();calcMort();renderDash();updateSyncUI();
+calcCosts();renderSav();renderLenders();renderRelLoans();renderLocs();renderProps();calcMort();renderAllDocs();renderBudget();renderBudgetPresets();renderAllMoving();renderDash();updateSyncUI();
 </script>
 </body>
 </html>
